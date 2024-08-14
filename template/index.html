@@ -6,6 +6,7 @@
     <title>Camera Feed</title>
 </head>
 <body>
+    <h1>Camera Feed</h1>
     <video id="video" autoplay></video>
     <script>
         // Access user's camera
@@ -27,12 +28,14 @@
                         const formData = new FormData();
                         formData.append('frame', blob, 'frame.jpg');
 
-                        fetch('/upload_frame/', {
+                        fetch('http://3.26.195.201:8001/upload_frame/', {  // Update with your Django server URL
                             method: 'POST',
                             body: formData
+                        }).catch(error => {
+                            console.error('Error uploading frame:', error);
                         });
                     }, 'image/jpeg');
-                }, 100); // Capture every 100ms
+                }, 200); // Capture every 200ms
             })
             .catch(error => {
                 console.error('Error accessing camera:', error);

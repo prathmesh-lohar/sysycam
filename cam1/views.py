@@ -1,4 +1,5 @@
 import io
+import time
 from django.http import StreamingHttpResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
@@ -6,6 +7,10 @@ import cv2
 import numpy as np
 from django.shortcuts import render
 from threading import Lock
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Buffer to store the latest frame and a lock for thread-safe operations
 frame_buffer = None
@@ -17,6 +22,8 @@ def camera_page(request):
 @csrf_exempt
 def upload_frame(request):
     global frame_buffer
+    start_time = time.time()
+    
     if request.method == 'POST':
         if 'frame' in request.FILES:
             image = request.FILES['frame']
@@ -31,7 +38,10 @@ def upload_frame(request):
             # Store the latest frame in the buffer
             with frame_lock:
                 frame_buffer = jpeg.tobytes()
-
+            
+            processing_time = time.time() - start_time
+            logging.info(f"Frame processed in {processing_time:.2f} seconds")
+            
             return HttpResponse("Frame received.", status=200)
 
         return HttpResponse("No frame found in request.", status=400)
@@ -45,5 +55,7 @@ def mjpeg_feed(request):
                 if frame_buffer:
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + frame_buffer + b'\r\n')
+            # Sleep to prevent excessive CPU usage
+            time.sleep(0.01)
     
     return StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
