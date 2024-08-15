@@ -28,14 +28,14 @@
                         const formData = new FormData();
                         formData.append('frame', blob, 'frame.jpg');
 
-                        fetch('http://3.26.195.201:8001/upload_frame/', {  // Update with your Django server URL
+                        fetch('http://localhost:8000/upload_frame/', {  // Update with your Django server URL
                             method: 'POST',
                             body: formData
                         }).catch(error => {
                             console.error('Error uploading frame:', error);
                         });
                     }, 'image/jpeg');
-                }, 200); // Capture every 200ms
+                }, 100); // Capture every 200ms
             })
             .catch(error => {
                 console.error('Error accessing camera:', error);

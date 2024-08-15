@@ -2,7 +2,6 @@ import io
 import time
 from django.http import StreamingHttpResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from PIL import Image
 import cv2
 import numpy as np
 from django.shortcuts import render
@@ -27,13 +26,14 @@ def upload_frame(request):
     if request.method == 'POST':
         if 'frame' in request.FILES:
             image = request.FILES['frame']
-            img = Image.open(image)
+            
+            # Directly read the uploaded frame without unnecessary conversions
+            file_bytes = np.frombuffer(image.read(), np.uint8)
+            img_cv = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-            img_cv = np.array(img)
-            img_cv = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
-
-            # Encode the frame as JPEG
-            _, jpeg = cv2.imencode('.jpg', img_cv)
+            # Encode the frame as JPEG (quality can be adjusted)
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]  # Adjust quality if needed
+            _, jpeg = cv2.imencode('.jpg', img_cv, encode_param)
 
             # Store the latest frame in the buffer
             with frame_lock:
@@ -55,7 +55,7 @@ def mjpeg_feed(request):
                 if frame_buffer:
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + frame_buffer + b'\r\n')
-            # Sleep to prevent excessive CPU usage
-            time.sleep(0.01)
+            # Adjust sleep time if needed
+            time.sleep(0.005)  # Reduced sleep time to improve frame rate
     
     return StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
