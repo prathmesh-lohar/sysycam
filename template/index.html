@@ -28,7 +28,7 @@
                         const formData = new FormData();
                         formData.append('frame', blob, 'frame.jpg');
 
-                        fetch('http://localhost:8000/upload_frame/', {  // Update with your Django server URL
+                        fetch('http://3.26.195.201:8001/upload_frame/', {  // Update with your Django server URL
                             method: 'POST',
                             body: formData
                         }).catch(error => {
